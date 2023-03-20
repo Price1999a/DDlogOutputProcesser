@@ -1,6 +1,5 @@
 package cn.edu.nju.stq;
 
-import lombok.extern.java.Log;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.cli.*;
 
@@ -25,9 +24,9 @@ public class Main {
                 printHelpInfo(options);
             } else {
                 log.info("input file: {}", commandLine.getOptionValue('i'));
-                Processer processer = new Processer();
-                processer.readInfoFromZip(commandLine.getOptionValue('i'));
-                processer.printRes();
+                Processor processor = new Processor();
+                processor.readInfoFromZip(commandLine.getOptionValue('i'));
+                processor.printRes();
             }
         } catch (ParseException e) {
             printHelpInfo(options);

@@ -1,0 +1,27 @@
+RA{aaa}: +1
+RA{bbb}: +1
+RB:
+RB{aaa}: +1
+RB{aa}: +1
+input start for iter 1
+Timestamp: 141405
+compute start for iter 1
+Timestamp: 91567903495
+RA:
+RA{aaa}: -1
+RC:
+RC{cccc}: +1
+compute end for iter 1
+Timestamp: 1431427586219
+input start for iter 2
+Timestamp: 1441427586219
+compute start for iter 2
+Timestamp: 1442427586219
+RA:
+RA{aaa}: +1
+RC:
+RC{cccc}: -1
+RD:
+RD{d}: +1
+compute end for iter 2
+Timestamp: 1452427586219
