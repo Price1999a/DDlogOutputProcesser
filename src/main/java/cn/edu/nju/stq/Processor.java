@@ -78,6 +78,7 @@ public class Processor {
                     totalIncTime += time2 - time1;
                     System.out.println("inc" + (i + 1) + " time: " + ns2sec(time2 - time1));
                 }
+                System.out.println("timeList.size(): " + timeList.size());
                 System.out.println("Total inc count: " + totalTime + " avg time: " + ns2sec(((double) totalIncTime) / totalTime));
                 System.out.println();
             }
