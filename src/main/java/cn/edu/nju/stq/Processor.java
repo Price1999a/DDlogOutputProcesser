@@ -141,6 +141,8 @@ public class Processor {
                 }
             }
         }
+
+        log.info("zip file done name: {}", zipEntry);
     }
 
     private StringBuilder generateCountInfo(Map<String, Integer> counts, int iter) {
