@@ -1321,6 +1321,22 @@ RmainAnalysis_SimulatedNativeAllocation:	2
 RmainAnalysis_StaticFieldPointsTo:	2682
 RmainAnalysis_VarPointsTo:	1349996
 
+    50996    306599   9677750 ./out/errorprone/database/AnyCallGraphEdge.csv
+    50963    408327  11910504 ./out/errorprone/database/CallGraphEdge.csv
+   121783   1568073  41462441 ./out/errorprone/database/InstanceFieldPointsTo.csv
+        0         0         0 ./out/errorprone/database/MockObject.csv
+     9227     27681    683225 ./out/errorprone/database/Reachable.csv
+     9227     36908    886219 ./out/errorprone/database/ReachableContext.csv
+     2682     21318    509795 ./out/errorprone/database/StaticFieldPointsTo.csv
+        4        19       125 ./out/errorprone/database/Stats_Runtime.csv
+  1347144  11880248 332106466 ./out/errorprone/database/VarPointsTo.csv
+        1         3       137 ./out/errorprone/database/isOpaqueInstruction.csv
+        0         0         0 ./out/errorprone/database/mainAnalysis.AssignInvokedynamic.csv
+      440       440     17560 ./out/errorprone/database/mainAnalysis.CollectionClass.csv
+        0         0         0 ./out/errorprone/database/mainAnalysis.MockedMethodReturns.csv
+        2        14       304 ./out/errorprone/database/mainAnalysis.SimulatedNativeAllocation.csv
+
+
 iter 2
 RisOpaqueInstruction:	1
 RmainAnalysis_AnyCallGraphEdge:	51026
@@ -3118,6 +3134,24 @@ RmainAnalysis_SimulatedNativeAllocation:	2
 RmainAnalysis_StaticFieldPointsTo:	3351
 RmainAnalysis_VarPointsTo:	1661217
 
+    55534    334029  10516874 ./out/jedis/database/AnyCallGraphEdge.csv
+    55461    444513  12937202 ./out/jedis/database/CallGraphEdge.csv
+   150285   1914191  50557487 ./out/jedis/database/InstanceFieldPointsTo.csv
+       36        72      3410 ./out/jedis/database/MockObject.csv
+    10424     31272    776823 ./out/jedis/database/Reachable.csv
+    10424     41696   1006151 ./out/jedis/database/ReachableContext.csv
+        0         0         0 ./out/jedis/database/SerializableEntryPointMethod.csv
+     3351     26613    638941 ./out/jedis/database/StaticFieldPointsTo.csv
+        4        19       125 ./out/jedis/database/Stats_Runtime.csv
+  1654934  14523001 405126969 ./out/jedis/database/VarPointsTo.csv
+        0         0         0 ./out/jedis/database/XMLIFPTDI.csv
+        1         3       137 ./out/jedis/database/isOpaqueInstruction.csv
+        0         0         0 ./out/jedis/database/mainAnalysis.AssignInvokedynamic.csv
+      407       407     15904 ./out/jedis/database/mainAnalysis.CollectionClass.csv
+        0         0         0 ./out/jedis/database/mainAnalysis.MockedMethodReturns.csv
+        2        14       304 ./out/jedis/database/mainAnalysis.SimulatedNativeAllocation.csv
+
+
 iter 2
 RMockObject:	36
 RisOpaqueInstruction:	1
@@ -3364,6 +3398,24 @@ RmainAnalysis_ReachableContext:	10442
 RmainAnalysis_SimulatedNativeAllocation:	2
 RmainAnalysis_StaticFieldPointsTo:	3542
 RmainAnalysis_VarPointsTo:	1669277
+
+    55526    333981  10515250 ./out/jedis/database/AnyCallGraphEdge.csv
+    55453    444449  12935226 ./out/jedis/database/CallGraphEdge.csv
+   150357   1914904  50525407 ./out/jedis/database/InstanceFieldPointsTo.csv
+       36        72      3430 ./out/jedis/database/MockObject.csv
+    10421     31263    776468 ./out/jedis/database/Reachable.csv
+    10421     41684   1005730 ./out/jedis/database/ReachableContext.csv
+        0         0         0 ./out/jedis/database/SerializableEntryPointMethod.csv
+     3362     26701    641234 ./out/jedis/database/StaticFieldPointsTo.csv
+        4        19       125 ./out/jedis/database/Stats_Runtime.csv
+  1653975  14514451 404920729 ./out/jedis/database/VarPointsTo.csv
+        0         0         0 ./out/jedis/database/XMLIFPTDI.csv
+        1         3       137 ./out/jedis/database/isOpaqueInstruction.csv
+        0         0         0 ./out/jedis/database/mainAnalysis.AssignInvokedynamic.csv
+      407       407     15904 ./out/jedis/database/mainAnalysis.CollectionClass.csv
+        0         0         0 ./out/jedis/database/mainAnalysis.MockedMethodReturns.csv
+        2        14       304 ./out/jedis/database/mainAnalysis.SimulatedNativeAllocation.csv
+
 
 
 2023-03-21 19:12:00 [main] INFO cn.edu.nju.stq.Processor - print output line count res of jedis-selective_2_object_sensitive_PLUS_heap
