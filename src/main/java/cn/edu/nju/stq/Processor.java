@@ -132,13 +132,18 @@ public class Processor {
             } else {
                 if (line.endsWith(" +1")) {
                     Integer i = outRelCount.computeIfPresent(currentRelName, (k, v) -> v + 1);
+                    outRelCount.computeIfPresent(currentRelName + "_add", (k, v) -> v + 1);
                     if (i == null) log.warn("this line from file {} generate error: {}", zipEntry, line);
                 } else if (line.endsWith(" -1")) {
                     Integer i = outRelCount.computeIfPresent(currentRelName, (k, v) -> v - 1);
+                    outRelCount.computeIfPresent(currentRelName + "_del", (k, v) -> v + 1);
                     if (i == null) log.warn("this line from file {} generate error: {}", zipEntry, line);
                 } else if (line.endsWith(":")) {
                     currentRelName = line.substring(0, line.length() - 1);
                     outRelCount.putIfAbsent(currentRelName, 0);
+                    outRelCount.putIfAbsent(currentRelName + "_add", 0);
+                    outRelCount.putIfAbsent(currentRelName + "_del", 0);
+                    // 增加一些更佳细节的输出
                 }
             }
         }
