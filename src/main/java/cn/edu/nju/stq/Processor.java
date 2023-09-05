@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -51,12 +53,9 @@ public class Processor {
      */
     public void printRes() {
         TreeMap<String, List<Long>> treeMapIncTime = new TreeMap<>(times);
-//        TreeMap<String, StringBuilder> treeMapOutCount = new TreeMap<>(outCountLog);
         new TreeMap<>(outCountLog).forEach((analysisInfo, strB) -> {
             log.info("print output line count res of {}", analysisInfo);
             System.out.println(strB.toString());
-
-//            System.out.println();
         });
 
         treeMapIncTime.forEach((analysisInfo, timeList) -> {
@@ -104,11 +103,28 @@ public class Processor {
         outCountLog.put(analysisInfo, new StringBuilder());
         //  让我们首先在这里实现一个时间统计器
         //  这里的关键就在于我们只需要简单的处理TimeStamp附近的内容即可
-        //
         int posEcho = 0, iter = 1;
         String line;
         String tmpTag = echosStr[posEcho] + iter;
         Map<String, Integer> outRelCount = new TreeMap<>();
+        Map<String, Integer> CGECount = new TreeMap<>();
+        Map<String, Integer> VPTCount = new TreeMap<>();
+        Map<String, Integer> IFPTCount = new TreeMap<>();
+        String pattern1 = ".__invocation\\s*=\\s*\"(.*?)\".*?\\.__method\\s*=\\s*\"(.*?)\"";
+        String pattern2 = ".__value\\s*=\\s*\"(.*?)\".*?\\.var\\s*=\\s*\"(.*?)\"";
+        String pattern3 = ".__value\\s*=\\s*\"(.*?)\".*?\\.__sig\\s*=\\s*\"(.*?)\".*?\\.__basevalue\\s*=\\s*\"(.*?)\"";
+
+        Pattern regexCGEPattern = Pattern.compile(pattern1);
+        Pattern regexVPTPattern = Pattern.compile(pattern2);
+        Pattern regexIFPTPattern = Pattern.compile(pattern3);
+
+        // 我们需要对这些部分进行处理
+        // RmainAnalysis_CallGraphEdge:
+        // RmainAnalysis_CallGraphEdge{.__callerCtx = "<<immutable-context>>", .__invocation = "<main-thread-init>/0", .__calleeCtx = "<<immutable-context>>", .__method = "<java.lang.Thread: void <init>(java.lang.ThreadGroup,java.lang.String)>"}: +1
+        // RmainAnalysis_VarPointsTo:
+        // RmainAnalysis_VarPointsTo{.__hctx = "<<immutable-hcontext>>", .__value = "<sun.misc.Perf: java.nio.ByteBuffer createLong(java.lang.String,int,int,long)>/new java.nio.DirectByteBuffer/0", .__ctx = "<<immutable-context>>", .var = "<java.nio.ByteBufferAsLongBufferB: java.nio.LongBuffer put(int,long)>/$stack4"}: +1
+        // RmainAnalysis_InstanceFieldPointsTo:
+        // RmainAnalysis_InstanceFieldPointsTo{.__hctx = "<<immutable-hcontext>>", .__value = "<sun.misc.Perf: java.nio.ByteBuffer createLong(java.lang.String,int,int,long)>/new java.nio.DirectByteBuffer/0", .__sig = "<java.nio.DirectLongBufferU: java.lang.Object att>", .__basehctx = "<<immutable-hcontext>>", .__basevalue = "<java.nio.DirectByteBuffer: java.nio.LongBuffer asLongBuffer()>/new java.nio.DirectLongBufferU/0"}: +1
         String currentRelName = "";
 
         while ((line = br.readLine()) != null) {
@@ -118,7 +134,11 @@ public class Processor {
                     posEcho = 0;
                     iter++;
                     //  在这里将统计数据生成（因为这里是某一次评估的结束点）
-                    outCountLog.get(analysisInfo).append(generateCountInfo(outRelCount, iter)).append('\n');
+                    outCountLog.get(analysisInfo).append(generateCountInfo(outRelCount, iter))
+                            .append("CGECount:\t").append(generateCountNumberWithoutContext(CGECount, iter))
+                            .append("VPTCount:\t").append(generateCountNumberWithoutContext(VPTCount, iter))
+                            .append("IFPTCount:\t").append(generateCountNumberWithoutContext(IFPTCount, iter))
+                            .append('\n');
                 } else posEcho++;
                 tmpTag = echosStr[posEcho] + iter;
                 line = br.readLine();
@@ -127,28 +147,77 @@ public class Processor {
                 if (!line.trim().startsWith("Timestamp: ")) {
                     throw new RuntimeException("错误的时间戳命令输出格式： " + line);
                 }
-//                log.info(line.substring(11));
                 times.get(analysisInfo).add(Long.parseLong(line.trim().substring(11)));
             } else {
                 if (line.endsWith(" +1")) {
                     Integer i = outRelCount.computeIfPresent(currentRelName, (k, v) -> v + 1);
                     outRelCount.computeIfPresent(currentRelName + "_add", (k, v) -> v + 1);
                     if (i == null) log.warn("this line from file {} generate error: {}", zipEntry, line);
+                    //  以下是统计去除上下文信息后的条数
+                    if (line.startsWith("RmainAnalysis_CallGraphEdge{")) {
+                        Matcher matcher = regexCGEPattern.matcher(line);
+                        if (matcher.find()) {
+                            CGECount.compute(matcher.group(1) + "#" + matcher.group(2),
+                                    (k, v) -> v == null ? 1 : v + 1);
+                        }
+                    } else if (line.startsWith("RmainAnalysis_VarPointsTo{")) {
+                        Matcher matcher = regexVPTPattern.matcher(line);
+                        if (matcher.find()) {
+                            VPTCount.compute(matcher.group(1) + "#" + matcher.group(2),
+                                    (k, v) -> v == null ? 1 : v + 1);
+                        }
+                    } else if (line.startsWith("RmainAnalysis_InstanceFieldPointsTo{")) {
+                        Matcher matcher = regexIFPTPattern.matcher(line);
+                        if (matcher.find()) {
+                            IFPTCount.compute(matcher.group(1) + "#" + matcher.group(2) + "#" + matcher.group(3),
+                                    (k, v) -> v == null ? 1 : v + 1);
+                        }
+                    }
                 } else if (line.endsWith(" -1")) {
                     Integer i = outRelCount.computeIfPresent(currentRelName, (k, v) -> v - 1);
                     outRelCount.computeIfPresent(currentRelName + "_del", (k, v) -> v + 1);
                     if (i == null) log.warn("this line from file {} generate error: {}", zipEntry, line);
+                    //  以下是统计去除上下文信息后的条数
+                    if (line.startsWith("RmainAnalysis_CallGraphEdge{")) {
+                        Matcher matcher = regexCGEPattern.matcher(line);
+                        if (matcher.find()) {
+                            CGECount.compute(matcher.group(1) + "#" + matcher.group(2),
+                                    (k, v) -> v == null ? 0 : v - 1);
+                        }
+                    } else if (line.startsWith("RmainAnalysis_VarPointsTo{")) {
+                        Matcher matcher = regexVPTPattern.matcher(line);
+                        if (matcher.find()) {
+                            VPTCount.compute(matcher.group(1) + "#" + matcher.group(2),
+                                    (k, v) -> v == null ? 0 : v - 1);
+                        }
+                    } else if (line.startsWith("RmainAnalysis_InstanceFieldPointsTo{")) {
+                        Matcher matcher = regexIFPTPattern.matcher(line);
+                        if (matcher.find()) {
+                            IFPTCount.compute(matcher.group(1) + "#" + matcher.group(2) + "#" + matcher.group(3),
+                                    (k, v) -> v == null ? 0 : v - 1);
+                        }
+                    }
                 } else if (line.endsWith(":")) {
                     currentRelName = line.substring(0, line.length() - 1);
                     outRelCount.putIfAbsent(currentRelName, 0);
                     outRelCount.putIfAbsent(currentRelName + "_add", 0);
                     outRelCount.putIfAbsent(currentRelName + "_del", 0);
-                    // 增加一些更佳细节的输出
+                    // 增加一些更细节的输出
                 }
             }
         }
 
         log.info("zip file done name: {}", zipEntry);
+    }
+
+    private StringBuilder generateCountNumberWithoutContext(Map<String, Integer> counts, int iter) {
+        StringBuilder sb = new StringBuilder();
+        int count = 0;
+        for (String withoutContext : counts.keySet()) {
+            if (counts.get(withoutContext) > 0) count++;
+        }
+        sb.append("iter ").append(iter - 1).append('\t').append(count).append('\n');
+        return sb;
     }
 
     private StringBuilder generateCountInfo(Map<String, Integer> counts, int iter) {
@@ -171,5 +240,43 @@ public class Processor {
             return filename.split("\\.")[1] + '-' + filename.split("\\.")[0].substring(filename.indexOf('_') + 1);
         }
         return "";
+    }
+
+    /**
+     * 简单测试正则代码
+     *
+     * @author shentianqi.stq
+     * @version 2023/09/05
+     */
+    public static void main(String[] args) {
+        // RmainAnalysis_CallGraphEdge:
+        // RmainAnalysis_CallGraphEdge{
+        // .__callerCtx = "<<immutable-context>>",
+        // .__invocation = "<main-thread-init>/0",
+        // .__calleeCtx = "<<immutable-context>>",
+        // .__method = "<java.lang.Thread: void <init>(java.lang.ThreadGroup,java.lang.String)>"}: +1
+
+        // RmainAnalysis_VarPointsTo:
+        // RmainAnalysis_VarPointsTo{
+        // .__hctx = "<<immutable-hcontext>>",
+        // .__value = "<sun.misc.Perf: java.nio.ByteBuffer createLong(java.lang.String,int,int,long)>/new java.nio.DirectByteBuffer/0",
+        // .__ctx = "<<immutable-context>>",
+        // .var = "<java.nio.ByteBufferAsLongBufferB: java.nio.LongBuffer put(int,long)>/$stack4"}: +1
+        // RmainAnalysis_InstanceFieldPointsTo:
+        // RmainAnalysis_InstanceFieldPointsTo{.__hctx = "<<immutable-hcontext>>",
+        // .__value = "<sun.misc.Perf: java.nio.ByteBuffer createLong(java.lang.String,int,int,long)>/new java.nio.DirectByteBuffer/0",
+        // .__sig = "<java.nio.DirectLongBufferU: java.lang.Object att>",
+        // .__basehctx = "<<immutable-hcontext>>",
+        // .__basevalue = "<java.nio.DirectByteBuffer: java.nio.LongBuffer asLongBuffer()>/new java.nio.DirectLongBufferU/0"}: +1
+        String str1 = "RmainAnalysis_CallGraphEdge{.__callerCtx = \"<<immutable-context>>\", .__invocation = \"<main-thread-init>/0\", .__calleeCtx = \"<<immutable-context>>\", .__method = \"<java.lang.Thread: void <init>(java.lang.ThreadGroup,java.lang.String)>\"}: +1";
+        String str2 = "RmainAnalysis_VarPointsTo{.__hctx = \"<<immutable-hcontext>>\", .__value = \"<sun.misc.Perf: java.nio.ByteBuffer createLong(java.lang.String,int,int,long)>/new java.nio.DirectByteBuffer/0\", .__ctx = \"<<immutable-context>>\", .var = \"<java.nio.ByteBufferAsLongBufferB: java.nio.LongBuffer put(int,long)>/$stack4\"}: +1";
+        String str3 = "RmainAnalysis_InstanceFieldPointsTo{.__hctx = \"<<immutable-hcontext>>\", .__value = \"<sun.misc.Perf: java.nio.ByteBuffer createLong(java.lang.String,int,int,long)>/new java.nio.DirectByteBuffer/0\", .__sig = \"<java.nio.DirectLongBufferU: java.lang.Object att>\", .__basehctx = \"<<immutable-hcontext>>\", .__basevalue = \"<java.nio.DirectByteBuffer: java.nio.LongBuffer asLongBuffer()>/new java.nio.DirectLongBufferU/0\"}: +1";
+        String pattern1 = ".__invocation\\s*=\\s*\"(.*?)\".*?\\.__method\\s*=\\s*\"(.*?)\"";
+        String pattern2 = ".__value\\s*=\\s*\"(.*?)\".*?\\.var\\s*=\\s*\"(.*?)\"";
+        String pattern3 = ".__value\\s*=\\s*\"(.*?)\".*?\\.__sig\\s*=\\s*\"(.*?)\".*?\\.__basevalue\\s*=\\s*\"(.*?)\"";
+
+        Pattern regexPattern1 = Pattern.compile(pattern1);
+        Matcher matcher = regexPattern1.matcher(str1);
+        System.out.println();
     }
 }
